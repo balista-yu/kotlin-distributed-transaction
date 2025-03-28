@@ -1,0 +1,22 @@
+spring:
+  jta:
+    enabled: true
+  datasource:
+    first:
+      jdbcUrl: jdbc:postgresql://db:5432/first_db
+      username: test
+      password: test
+      driverClassName: org.postgresql.Driver
+    second:
+      jdbcUrl: jdbc:postgresql://db:5432/second_db
+      username: test
+      password: test
+      driverClassName: org.postgresql.Driver
+logging:
+  level:
+    com:
+      atomikos: DEBUG
+    root: INFO
+atomikos:
+  properties:
+    max-timeout: 900000

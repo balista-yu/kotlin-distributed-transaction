@@ -1,0 +1,57 @@
+name: 'kotlin-distributed-transaction'
+
+services:
+  app:
+    container_name: kotlin-distributed-transaction-app-container
+    hostname: kotlin-distributed-transaction-app-server
+    image: kotlin-distributed-transaction/app:dev
+    build:
+      context: .
+      dockerfile: ./infra/docker/app/Dockerfile
+      cache_from:
+        - kotlin-distributed-transaction/app:cache
+      target: production
+    depends_on:
+      - db
+    networks:
+      - default
+    ports:
+      - '8080:8080'
+
+  db:
+    container_name: kotlin-distributed-transaction-db-container
+    hostname: kotlin-distributed-transaction-db-server
+    image: kotlin-distributed-transaction/db:dev
+    build:
+      context: .
+      dockerfile: ./infra/docker/db/Dockerfile
+      cache_from:
+        - kotlin-distributed-transaction/db:cache
+    restart: always
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_USER=${POSTGRES_DB_USER:-test}
+      - POSTGRES_PASSWORD=${POSTGRES_DB_PASS:-test}
+    volumes:
+      - db-data-volume:/var/lib/postgresql/data
+      - ./infra/docker/db/init:/docker-entrypoint-initdb.d/
+      - ./infra/docker/db/config/postgresql.conf:/etc/postgresql/postgresql.conf
+    networks:
+      - default
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  default:
+    name: kotlin-distributed-transaction
+
+volumes:
+  db-data-volume:
+    name: kotlin-distributed-transaction-db-data
+    driver: local
