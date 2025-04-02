@@ -3,13 +3,15 @@ package com.sample.transaction.infrastructure.db
 import com.atomikos.jdbc.AtomikosDataSourceBean
 import org.postgresql.xa.PGXADataSource
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.jdbc.DataSourceBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import javax.sql.DataSource
 
 @Configuration
-class JdbcConfig {
+@EnableConfigurationProperties(DataSourceProperties::class)
+class JdbcConfig(private val dataSourceProperties: DataSourceProperties) {
     @Bean("firstDataSource1")
     @ConfigurationProperties("spring.datasource.first")
     fun createFirstDataSource1(): DataSource = DataSourceBuilder.create().build()
@@ -19,30 +21,35 @@ class JdbcConfig {
     fun createSecondDataSource1(): DataSource = DataSourceBuilder.create().build()
 
     @Bean("firstDataSource2")
-    @ConfigurationProperties("spring.datasource.first")
     fun createFirstDataSource2(): DataSource {
-        val xaDataSource = PGXADataSource()
-        xaDataSource.setUrl("jdbc:postgresql://db:5432/first_db")
-        xaDataSource.user = "test"
-        xaDataSource.password = "test"
-
-        val dataSource = AtomikosDataSourceBean()
-        dataSource.uniqueResourceName = "firstDataSource"
-        dataSource.xaDataSource = xaDataSource
-        return dataSource
+        return createXADataSource(
+            "firstDataSource",
+            dataSourceProperties.first.jdbcUrl,
+            dataSourceProperties.first.username,
+            dataSourceProperties.first.password,
+        )
     }
 
     @Bean("secondDataSource2")
-    @ConfigurationProperties("spring.datasource.second")
     fun createSecondDataSource2(): DataSource {
-        val xaDataSource = PGXADataSource()
-        xaDataSource.setUrl("jdbc:postgresql://db:5432/second_db")
-        xaDataSource.user = "test"
-        xaDataSource.password = "test"
+        return createXADataSource(
+            "secondDataSource",
+            dataSourceProperties.second.jdbcUrl,
+            dataSourceProperties.second.username,
+            dataSourceProperties.second.password,
+        )
+    }
 
-        val dataSource = AtomikosDataSourceBean()
-        dataSource.uniqueResourceName = "secondDataSource"
-        dataSource.xaDataSource = xaDataSource
-        return dataSource
+    private fun createXADataSource(resourceName: String, url: String, user: String, password: String): DataSource {
+        val pgxaDataSource = PGXADataSource().apply {
+            setUrl(url)
+            this.user = user
+            this.password = password
+        }
+
+        return AtomikosDataSourceBean().apply {
+            uniqueResourceName = resourceName
+            xaDataSource = pgxaDataSource
+        }
     }
 }
