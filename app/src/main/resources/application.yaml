@@ -17,6 +17,3 @@ logging:
     com:
       atomikos: DEBUG
     root: INFO
-atomikos:
-  properties:
-    max-timeout: 900000
