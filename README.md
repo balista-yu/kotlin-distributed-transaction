@@ -31,13 +31,13 @@ $ curl http://localhost:8080/sample/failed-distributed-transaction
 ```
 
 4. Confirm DB
-Login PostgreSQL Server
+- Login PostgreSQL Server
 ```
 $ psql -h localhost -p 5432 -U test -d first_db
 $ psql -h localhost -p 5432 -U test -d second_db
 ```
 
-Run SQL
+- Run SQL
 ```
 first_db=# select id from first_table;
 second_db=# select id from second_table;
